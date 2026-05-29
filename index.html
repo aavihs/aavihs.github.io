@@ -1,20 +1,34 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>Myfirstwebsite</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
-    
-</head>
-
-<body>
-    <h1>About Me</h1>
-    <p> I'm Rav</p>
-    <button onclick="sayHello()">
-        Click Me
-    </button>
-
-</body>
-
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>red-knight</title>
+    <script src="chess.js"></script>
+    <link rel="stylesheet" href="chess.css" />
+  </head>
+  <body>
+  
+    <image
+      class="iconhead"
+      src="redknight.png"
+      width="80"
+      alt="Small image"
+    ></image>
+    <div class="board">
+      <ul class="numbers"></ul>
+      <ul class="letters"></ul>
+    </div>
+    <div id="controls">
+      <button id="newGameBtn" class="control-button" onclick="resetGame()">
+        New game
+      </button>
+      <button id="undoBtn" class="control-button" onclick="undoMove()">
+        Undo
+      </button>
+    </div>
+    <div id="display">
+      <h2 id="moveheader">Move History          ...</h2>
+    </div>
+  </body>
 </html>
