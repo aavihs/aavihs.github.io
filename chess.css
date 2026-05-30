@@ -76,8 +76,7 @@ body {
 }
 .moveline {
   display: grid;
-  width:vh
-  grid-template-columns: 35px 1fr 1fr;
+  grid-template-columns: 300px 1fr 1fr;
   align-items: center;
   padding: 8px 0;
   
