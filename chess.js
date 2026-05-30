@@ -26,12 +26,13 @@ let BKSideChecked = 0;
 let BQSideChecked = 0;
 let WKSideChecked = 0;
 let WQSideChecked = 0;
-let wCanCastleKQ = [1, 1];
-let bCanCastleKQ = [1, 1];
+let wCanCastleKQ = [0, 0];
+let bCanCastleKQ = [0, 0];
 
 let enPassantMeWhite = [0, 0, 0, 0, 0, 0, 0, 0];
 let enPassantMeBlack = [0, 0, 0, 0, 0, 0, 0, 0];
 let check = 0;
+let toCheck = 0;
 let lastCheck = 0;
 let k = 0;
 let squaresRank = [];
@@ -266,6 +267,7 @@ function listSquaresDiagonalRoute(fromRow, fromCol, toRow, toCol) {
 }
 
 function canBeBlockedOrTaken(a, b, c, d, kingColor) {
+  debugger;
   let pieceAttacker = board[a][b].toUpperCase();
   let blockersBlack = 0;
   let blockersWhite = 0;
@@ -363,7 +365,7 @@ function canBeBlockedOrTaken(a, b, c, d, kingColor) {
                 (board[a.fromRow][a.fromCol] === "P" && a.canWhitePawn)),
           ),
       ).length;
-      if (blockerWhite > 0) {
+      if (blockersWhite > 0) {
         break;
       }
     }
@@ -386,7 +388,6 @@ function canBeBlockedOrTaken(a, b, c, d, kingColor) {
 
 function adjustRoutes() {
   routes = [];
-  check = 0;
 
   document
     .querySelectorAll(".check")
@@ -470,7 +471,7 @@ function adjustRoutes() {
             WQSideBlocked == 0
           ) {
             canKing = true;
-            isBlocked = "N";
+            isBlocked = false;
           }
           if (
             board[r][c] == "K" &&
@@ -483,7 +484,7 @@ function adjustRoutes() {
             WKSideBlocked == 0
           ) {
             canKing = true;
-            isBlocked = "N";
+            isBlocked = false;
           }
 
           if (
@@ -497,9 +498,11 @@ function adjustRoutes() {
             BQSideBlocked == 0
           ) {
             canKing = true;
-            isBlocked = "N";
+            isBlocked = false;
           }
-          debugger;
+
+          if (board[r][c] == "k") {
+          }
           if (
             board[r][c] == "k" &&
             r == 0 &&
@@ -511,7 +514,7 @@ function adjustRoutes() {
             BKSideBlocked == 0
           ) {
             canKing = true;
-            isBlocked = "N";
+            isBlocked = false;
           }
 
           // ── Knight (L-shapes) ─────────────────────────────────────────────
@@ -649,6 +652,38 @@ function isLegalMove(route) {
   const piece = board[route.fromRow][route.fromCol];
   if (piece === " ") return false;
 
+  // if (route.fromId == "E8" && route.toId == "F8") {
+  //   debugger;
+  // }
+  if (
+    piece == "k" &&
+    route.fromId == "E8" &&
+    route.toId == "G8" &&
+    bCanCastleKQ[0] == 1
+  )
+    return true;
+  if (
+    piece == "k" &&
+    route.fromId == "E8" &&
+    route.toId == "C8" &&
+    bCanCastleKQ[1] == 1
+  )
+    return true;
+  if (
+    piece == "K" &&
+    route.fromId == "E1" &&
+    route.toId == "G1" &&
+    wCanCastleKQ[0] == 1
+  )
+    return true;
+  if (
+    piece == "K" &&
+    route.fromId == "E1" &&
+    route.toId == "C1" &&
+    wCanCastleKQ[1] == 1
+  )
+    return true;
+
   const pieceUpper = piece.toUpperCase();
   const isWhitePiece = piece === pieceUpper;
   const targetPiece = board[route.toRow][route.toCol];
@@ -677,11 +712,42 @@ function highlightMoves(fromId) {
     if (route.fromId !== fromId) continue;
     if (!isLegalMove(route)) continue;
 
+    toCheck = 0;
+
     const piece = board[route.fromRow][route.fromCol];
     const isWhitePiece = piece === piece.toUpperCase();
     const targetPiece = board[route.toRow][route.toCol];
+    // debugger;
 
-    if (whiteToMove && isWhitePiece) {
+    if (!whiteToMove && piece == "k") {
+      toCheck = routes.filter(
+        (k) =>
+          k.toId == route.toId &&
+          !k.isBlocked &&
+          ((board[k.fromRow][k.fromCol] === "B" && k.canBishop) ||
+            (board[k.fromRow][k.fromCol] === "R" && k.canRook) ||
+            (board[k.fromRow][k.fromCol] === "Q" && k.canQueen) ||
+            (board[k.fromRow][k.fromCol] === "N" && k.canKnight) ||
+            (board[k.fromRow][k.fromCol] === "P" && k.canWhitePawn)),
+      ).length;
+    }
+
+    if (whiteToMove && piece == "K") {
+      toCheck = routes.filter(
+        (k) =>
+          k.toId == route.toId &&
+          !k.isBlocked &&
+          ((board[k.fromRow][k.fromCol] === "b" && k.canBishop) ||
+            (board[k.fromRow][k.fromCol] === "r" && k.canRook) ||
+            (board[k.fromRow][k.fromCol] === "q" && k.canQueen) ||
+            (board[k.fromRow][k.fromCol] === "n" && k.canKnight) ||
+            (board[k.fromRow][k.fromCol] === "p" && k.canBlackPawn)),
+      ).length;
+    }
+
+    // debugger;
+
+    if (whiteToMove && isWhitePiece && toCheck == 0) {
       const targetIsEmpty = targetPiece === " ";
       const targetIsBlack =
         targetPiece !== " " && targetPiece === targetPiece.toLowerCase();
@@ -689,7 +755,7 @@ function highlightMoves(fromId) {
         document.getElementById(route.toId).classList.add("move");
       }
     }
-    if (!whiteToMove && !isWhitePiece) {
+    if (!whiteToMove && !isWhitePiece && toCheck == 0) {
       const targetIsEmpty = targetPiece === " ";
       const targetIsWhite =
         targetPiece !== " " && targetPiece === targetPiece.toUpperCase();
@@ -700,80 +766,156 @@ function highlightMoves(fromId) {
   }
 }
 
-function castlingCheck(wm, from, to) {
-  if (wm == true) {
-    if (from == "A1") {
-      WQRhasMoved = 1;
-      wCanCastleKQ[1] = 0;
-    }
+function castlingCheck(ms, wm, from) {
+  if (ms == "m") {
+    if (wm == true) {
+      if (from == "A1") {
+        WQRhasMoved = 1;
+      }
 
-    if (from == "E1") {
-      WKhasMoved = 1;
-      wCanCastleKQ[0] = 0;
-      wCanCastleKQ[1] = 0;
+      if (from == "E1") {
+        WKhasMoved = 1;
+      }
+      if (from == "H1") {
+        WKRhasMoved = 1;
+      }
+    } else {
+      if (from == "A8") {
+        BQRhasMoved = 1;
+      }
+      if (from == "E8") {
+        BKhasMoved = 1;
+      }
+      if (from == "H8") {
+        BKRhasMoved = 1;
+      }
     }
-    if (from == "H1") {
-      WKRhasMoved = 1;
-      wCanCastleKQ[0] = 0;
-    }
+  }
 
-    if (board[7][1] == " " && board[7][2] == " " && board[7][3] == " ") {
-      WQSideBlocked = 0;
-    }
-
-    if (board[7][5] == " " && board[7][6] == " ") {
-      WKSideBlocked = 0;
-    }
-
-    WQSideChecked = routes.filter((w) => {
-      w.s == 7 && w.d >= 2 && w.d <= 4 && w.isBlocked != "Y";
-    }).length;
-    WKSideChecked = routes.filter((x) => {
-      x.s == 7 && w.d >= 4 && x.d <= 6 && x.isBlocked != "Y";
-    }).length;
-
-    // if (WQSideChecked > 0) {
-    //   wCanCastleKQ[1] = 0;
-    // }
-    // if (WKSideChecked > 0) {
-    //   wCanCastleKQ[0] = 0;
-    // }
+  if (board[7][1] == " " && board[7][2] == " " && board[7][3] == " ") {
+    WQSideBlocked = 0;
   } else {
-    if (from == "A8") {
-      BQRhasMoved = 1;
-      bCanCastleKQ[1] = 0;
-    }
-    if (from == "E8") {
-      BKhasMoved = 1;
-      bCanCastleKQ[0] = 0;
-      bCanCastleKQ[1] = 0;
-    }
-    if (from == "H8") {
-      BKRhasMoved = 1;
-      bCanCastleKQ[0] = 0;
-    }
+    WQSideBlocked = 1;
+  }
+  if (board[7][5] == " " && board[7][6] == " ") {
+    WKSideBlocked = 0;
+  } else {
+    WKSideBlocked = 1;
+  }
 
-    if (board[0][1] == " " && board[0][2] == " " && board[0][3] == " ") {
-      BQSideBlocked = 0;
-    }
+  WQSideChecked = routes.filter(
+    (w) =>
+      w.toRow == 7 &&
+      w.toCol >= 2 &&
+      w.toCol <= 4 &&
+      !w.isBlocked &&
+      ((board[w.fromRow][w.fromCol] === "b" && w.canBishop) ||
+        (board[w.fromRow][w.fromCol] === "r" && w.canRook) ||
+        (board[w.fromRow][w.fromCol] === "q" && w.canQueen) ||
+        (board[w.fromRow][w.fromCol] === "n" && w.canKnight) ||
+        (board[w.fromRow][w.fromCol] === "k" && w.canKing) ||
+        (board[w.fromRow][w.fromCol] === "p" && w.canBlackPawn)),
+  ).length;
 
-    if (board[0][5] == " " && board[0][6] == " ") {
-      BKSideBlocked = 0;
-    }
+  WKSideChecked = routes.filter(
+    (x) =>
+      x.toRow == 7 &&
+      x.toCol >= 4 &&
+      x.toCol <= 6 &&
+      !x.isBlocked &&
+      ((board[x.fromRow][x.fromCol] === "b" && x.canBishop) ||
+        (board[x.fromRow][x.fromCol] === "r" && x.canRook) ||
+        (board[x.fromRow][x.fromCol] === "q" && x.canQueen) ||
+        (board[x.fromRow][x.fromCol] === "n" && x.canKnight) ||
+        (board[x.fromRow][x.fromCol] === "k" && x.canKing) ||
+        (board[x.fromRow][x.fromCol] === "p" && x.canBlackPawn)),
+  ).length;
 
-    BQSideChecked = routes.filter((b) => {
-      b.s == 0 && b.d >= 2 && b.d <= 4 && b.isBlocked != "Y";
-    }).length;
-    BKSideChecked = routes.filter((c) => {
-      c.s == 0 && c.d >= 4 && c.d <= 6 && c.isBlocked != "Y";
-    }).length;
+  // if (from == "E8" && ms == "s") {
+  //   debugger;
+  // }
+  if (board[0][1] == " " && board[0][2] == " " && board[0][3] == " ") {
+    BQSideBlocked = 0;
+  } else {
+    BQSideBlocked = 1;
+  }
 
-    // if (BQSideChecked > 0 && bCanCastleKQ[1] = 0;
-    //   bCanCastleKQ[1] = 0;
-    // }
-    // if (BKSideChecked > 0) {
-    //   bCanCastleKQ[0] = 0;
-    // }
+  if (board[0][5] == " " && board[0][6] == " ") {
+    BKSideBlocked = 0;
+  } else {
+    BKSideBlocked = 1;
+  }
+
+  BQSideChecked = routes.filter(
+    (b) =>
+      b.toRow == 0 &&
+      b.toCol >= 2 &&
+      b.toCol <= 4 &&
+      !b.isBlocked &&
+      ((board[b.fromRow][b.fromCol] === "B" && b.canBishop) ||
+        (board[b.fromRow][b.fromCol] === "R" && b.canRook) ||
+        (board[b.fromRow][b.fromCol] === "Q" && b.canQueen) ||
+        (board[b.fromRow][b.fromCol] === "N" && b.canKnight) ||
+        (board[b.fromRow][b.fromCol] === "K" && b.canKing) ||
+        (board[b.fromRow][b.fromCol] === "P" && b.canWhitePawn)),
+  ).length;
+
+  BKSideChecked = routes.filter(
+    (c) =>
+      c.toRow == 0 &&
+      c.toCol >= 4 &&
+      c.toCol <= 6 &&
+      !c.isBlocked &&
+      ((board[c.fromRow][c.fromCol] === "B" && c.canBishop) ||
+        (board[c.fromRow][c.fromCol] === "R" && c.canRook) ||
+        (board[c.fromRow][c.fromCol] === "Q" && c.canQueen) ||
+        (board[c.fromRow][c.fromCol] === "N" && c.canKnight) ||
+        (board[c.fromRow][c.fromCol] === "K" && c.canKing) ||
+        (board[c.fromRow][c.fromCol] === "P" && c.canWhitePawn)),
+  ).length;
+
+  // debugger;
+
+  if (
+    BQSideChecked == 0 &&
+    BQSideBlocked == 0 &&
+    BQRhasMoved == 0 &&
+    BKhasMoved == 0
+  ) {
+    bCanCastleKQ[1] = 1;
+  } else {
+    bCanCastleKQ[1] = 0;
+  }
+
+  if (
+    BKSideChecked == 0 &&
+    BKSideBlocked == 0 &&
+    BKRhasMoved == 0 &&
+    BKhasMoved == 0
+  ) {
+    bCanCastleKQ[0] = 1;
+  } else {
+    bCanCastleKQ[0] = 0;
+  }
+  if (
+    WQSideChecked == 0 &&
+    WQSideBlocked == 0 &&
+    WQRhasMoved == 0 &&
+    WKhasMoved == 0
+  ) {
+    wCanCastleKQ[1] = 1;
+  } else {
+    wCanCastleKQ[1] = 0;
+  }
+  if (
+    WKSideChecked == 0 &&
+    WKSideBlocked == 0 &&
+    WKRhasMoved == 0 &&
+    WKhasMoved == 0
+  ) {
+    wCanCastleKQ[0] = 1;
+  } else {
+    wCanCastleKQ[0] = 0;
   }
 
   return 0;
@@ -784,12 +926,14 @@ function castlingCheck(wm, from, to) {
 function checkForCheckmate() {
   // 1. Can the white king move to any safe square?
 
+
+  // debugger;
   const whiteKMoves = routes.filter((r) => {
     if (board[r.fromRow][r.fromCol] !== "K") return false;
     if (!r.canKing) return false;
 
     const target = board[r.toRow][r.toCol];
-    if (target !== " " && target !== target.toLowerCase()) return false;
+    if (target !== " " && target === target.toUpperCase()) return false;
 
     // Square must not be attacked by any black piece
     return !routes.some(
@@ -817,8 +961,8 @@ function checkForCheckmate() {
           board[a.fromRow][a.fromCol].toLowerCase() && // black attacker
         ((board[a.fromRow][a.fromCol] === "b" && a.canBishop) ||
           (board[a.fromRow][a.fromCol] === "r" && a.canRook) ||
-          (board[a.fromRow][a.fromCol] === "q" && a.canQueen),
-        (board[a.fromRow][a.fromCol] === "n" && a.canKnight) ||
+          (board[a.fromRow][a.fromCol] === "q" && a.canQueen) ||
+          (board[a.fromRow][a.fromCol] === "n" && a.canKnight) ||
           (board[a.fromRow][a.fromCol] === "k" && a.canKing) ||
           (board[a.fromRow][a.fromCol] === "p" && a.canBlackPawn)),
     );
@@ -885,7 +1029,9 @@ function checkForCheckmate() {
     );
   };
 
-  // Both now consistent
+  // Both now consisten
+  // 
+  // debugger;
 
   if (check === 2 && whiteKMoves === 0 && !whiteCanBlock())
     alert("Checkmate! Black wins.");
@@ -929,11 +1075,10 @@ window.onload = function () {
   gameboard.addEventListener("click", function (event) {
     const target = event.target.closest(".square");
     if (!target) return;
-
+    const fromId = selectedSquare;
     const isMoveDest = selectedSquare && target.classList.contains("move");
 
     if (isMoveDest) {
-      const fromId = selectedSquare;
       const toId = target.id;
       const route = routes.find((r) => r.fromId === fromId && r.toId === toId);
       if (route) {
@@ -1010,14 +1155,12 @@ window.onload = function () {
       board[route.toRow][route.toCol] = board[route.fromRow][route.fromCol];
       board[route.fromRow][route.fromCol] = " ";
 
-      const eP = routes.find((z) => (z.fromId = route.enPassantId));
+      const eP = routes.find((z) => z.fromId == route.enPassantId);
       if (eP) {
         board[eP.fromRow][eP.fromCol] = " ";
       }
       lastCheck = check;
       adjustRoutes();
-
-      castlingCheck(whiteToMove, fromId, toId);
 
       // ── Reject move if it leaves/puts own king in check ───────────────
       if (
@@ -1086,6 +1229,7 @@ window.onload = function () {
         }
 
         checkForCheckmate();
+        castlingCheck("m", whiteToMove, fromId);
       }
       document
         .querySelectorAll(".selected, .move")
@@ -1093,12 +1237,16 @@ window.onload = function () {
       whiteToMove = !whiteToMove;
     } else {
       // ── Select a piece ───────────────────────────────────────────────────
-      adjustRoutes();
+
       document
         .querySelectorAll(".selected, .move")
         .forEach((sq) => sq.classList.remove("selected", "move"));
-      selectedSquare = target.id;
+      //debugger;
       target.classList.add("selected");
+      selectedSquare = target.id;
+      //castlingCheck(whiteToMove, selectedSquare);
+      castlingCheck("s", whiteToMove, selectedSquare);
+      adjustRoutes();
       highlightMoves(selectedSquare);
     }
   });
