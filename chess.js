@@ -112,7 +112,8 @@ function makeRoute({
   toRow,
   toCol,
   isBlocked,
-  underCheck,
+  check,
+  lastCheck,
   enPassantId,
 }) {
   return {
@@ -136,7 +137,8 @@ function makeRoute({
     toRow,
     toCol,
     isBlocked,
-    underCheck,
+    check,
+    lastCheck,
     enPassantId,
   };
 }
@@ -172,7 +174,7 @@ function resetGame() {
 }
 
 function undoMove() {
-  debugger;
+  // debugger;
   board = structuredClone(boardPrev);
   renderBoard();
   adjustRoutes();
@@ -393,10 +395,9 @@ function canBeBlockedOrTaken(a, b, c, d, kingColor) {
  * Rebuilds the full routes table and marks squares in check.
  * Called after every move and on initial square selection.
  */
-
+``;
 function adjustRoutes() {
   routes = [];
-
   document
     .querySelectorAll(".check")
     .forEach((el) => el.classList.remove("check"));
@@ -405,6 +406,7 @@ function adjustRoutes() {
     for (let c = 0; c <= 7; c++) {
       for (let s = 0; s <= 7; s++) {
         for (let d = 0; d <= 7; d++) {
+          check = 0;
           const fromCode = LINES[r + 2][c + 1];
           const toCode = LINES[s + 2][d + 1];
           const fromRank = parseInt(fromCode[0]);
@@ -613,6 +615,7 @@ function adjustRoutes() {
           if (fromPiece !== " " && !isBlocked && canAttack) {
             const fromIsWhite = fromPiece === fromPiece.toUpperCase();
             if (fromIsWhite && toPiece === "k") {
+              debugger;
               document.getElementById(squareId(d, s)).classList.add("check");
               check = 1;
             }
@@ -644,7 +647,8 @@ function adjustRoutes() {
               toRow: s,
               toCol: d,
               isBlocked,
-              underCheck: check,
+              check,
+              lastCheck,
               enPassantId,
             }),
           );
@@ -1024,9 +1028,13 @@ function checkForCheckmate() {
     );
   };
 
-  if (check === 2 && whiteKMoves === 0 && !whiteCanBlock())
+  debugger;
+  let checkB = routes.filter((y) => y.check == 1).length;
+  let checkW = routes.filter((y) => y.check == 2).length;
+
+  if (checkW > 0 && whiteKMoves === 0 && !whiteCanBlock())
     alert("Checkmate! Black wins.");
-  if (check === 1 && blackKMoves === 0 && !blackCanBlock())
+  if (checkB > 0 && blackKMoves === 0 && !blackCanBlock())
     alert("Checkmate! White wins.");
 }
 // ─── Board Initialisation ─────────────────────────────────────────────────────
@@ -1113,7 +1121,7 @@ window.onload = function () {
       }
 
       //console.table(routes);
-    
+
       let letterFirst = "";
       let moove = "";
 
@@ -1137,15 +1145,11 @@ window.onload = function () {
         moove = "O-O-O";
       }
 
-  if (whiteToMove) {
-      lastMove=moove;
+      if (whiteToMove) {
+        lastMove = moove;
+      } else {
+        lastMove = lastMove + "     " + moove;
       }
-else{
-  lastMove = lastMove +'     ' + moove;
-
-}
-
-    
 
       boardPrev = structuredClone(board);
 
@@ -1156,15 +1160,12 @@ else{
       if (eP) {
         board[eP.fromRow][eP.fromCol] = " ";
       }
-      lastCheck = check;
+      routes.forEach((r) => (r.lastCheck = check));
       adjustRoutes();
 
       // ── Reject move if it leaves/puts own king in check ───────────────
-      if (
-        (check !== 0 && lastCheck === check) ||
-        (lastCheck === 0 && check === 1 && !whiteToMove) ||
-        (lastCheck === 0 && check === 2 && whiteToMove)
-      ) {
+
+      if (routes.filter((h) => h.check > 0 && h.lastCheck > 0).length > 0) {
         undoMove();
         alert("Illegal — you are in check!");
       } else {
