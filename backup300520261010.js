@@ -172,22 +172,13 @@ function resetGame() {
 }
 
 function undoMove() {
-  debugger;
   board = structuredClone(boardPrev);
   renderBoard();
   adjustRoutes();
-
   whiteToMove = !whiteToMove;
-
-  if (whiteToMove) {
-    const parent = document.getElementById("display");
-    parent.lastElementChild.remove();
-    history.pop();
-  } else {
-    lastMove = lastMove.split("     ")[0];
-    const moveLine = document.getElementById("Move" + history.length);
-    moveLine.textContent = (history.length + ". " + lastMove).trim();
-  }
+  const parent = document.getElementById("display");
+  parent.lastElementChild.remove();
+  history.pop();
 }
 
 // ─── Route Calculation ────────────────────────────────────────────────────────
@@ -276,6 +267,7 @@ function listSquaresDiagonalRoute(fromRow, fromCol, toRow, toCol) {
 }
 
 function canBeBlockedOrTaken(a, b, c, d, kingColor) {
+  debugger;
   let pieceAttacker = board[a][b].toUpperCase();
   let blockersBlack = 0;
   let blockersWhite = 0;
@@ -660,6 +652,9 @@ function isLegalMove(route) {
   const piece = board[route.fromRow][route.fromCol];
   if (piece === " ") return false;
 
+  // if (route.fromId == "E8" && route.toId == "F8") {
+  //   debugger;
+  // }
   if (
     piece == "k" &&
     route.fromId == "E8" &&
@@ -722,6 +717,7 @@ function highlightMoves(fromId) {
     const piece = board[route.fromRow][route.fromCol];
     const isWhitePiece = piece === piece.toUpperCase();
     const targetPiece = board[route.toRow][route.toCol];
+    // debugger;
 
     if (!whiteToMove && piece == "k") {
       toCheck = routes.filter(
@@ -748,6 +744,8 @@ function highlightMoves(fromId) {
             (board[k.fromRow][k.fromCol] === "p" && k.canBlackPawn)),
       ).length;
     }
+
+    // debugger;
 
     if (whiteToMove && isWhitePiece && toCheck == 0) {
       const targetIsEmpty = targetPiece === " ";
@@ -833,6 +831,9 @@ function castlingCheck(ms, wm, from) {
         (board[x.fromRow][x.fromCol] === "p" && x.canBlackPawn)),
   ).length;
 
+  // if (from == "E8" && ms == "s") {
+  //   debugger;
+  // }
   if (board[0][1] == " " && board[0][2] == " " && board[0][3] == " ") {
     BQSideBlocked = 0;
   } else {
@@ -872,6 +873,8 @@ function castlingCheck(ms, wm, from) {
         (board[c.fromRow][c.fromCol] === "K" && c.canKing) ||
         (board[c.fromRow][c.fromCol] === "P" && c.canWhitePawn)),
   ).length;
+
+  // debugger;
 
   if (
     BQSideChecked == 0 &&
@@ -923,6 +926,8 @@ function castlingCheck(ms, wm, from) {
 function checkForCheckmate() {
   // 1. Can the white king move to any safe square?
 
+
+  // debugger;
   const whiteKMoves = routes.filter((r) => {
     if (board[r.fromRow][r.fromCol] !== "K") return false;
     if (!r.canKing) return false;
@@ -1024,6 +1029,10 @@ function checkForCheckmate() {
     );
   };
 
+  // Both now consisten
+  // 
+  // debugger;
+
   if (check === 2 && whiteKMoves === 0 && !whiteCanBlock())
     alert("Checkmate! Black wins.");
   if (check === 1 && blackKMoves === 0 && !blackCanBlock())
@@ -1113,7 +1122,9 @@ window.onload = function () {
       }
 
       //console.table(routes);
-    
+      if (whiteToMove) {
+        lastMove = "";
+      }
       let letterFirst = "";
       let moove = "";
 
@@ -1137,15 +1148,7 @@ window.onload = function () {
         moove = "O-O-O";
       }
 
-  if (whiteToMove) {
-      lastMove=moove;
-      }
-else{
-  lastMove = lastMove +'     ' + moove;
-
-}
-
-    
+      lastMove = lastMove + "      " + moove;
 
       boardPrev = structuredClone(board);
 
@@ -1169,7 +1172,6 @@ else{
         alert("Illegal — you are in check!");
       } else {
         // Log move in sidebar
-
         if (whiteToMove) {
           history.push(lastMove);
           const moveLine = document.createElement("div");
@@ -1239,7 +1241,7 @@ else{
       document
         .querySelectorAll(".selected, .move")
         .forEach((sq) => sq.classList.remove("selected", "move"));
-
+      //debugger;
       target.classList.add("selected");
       selectedSquare = target.id;
       //castlingCheck(whiteToMove, selectedSquare);
