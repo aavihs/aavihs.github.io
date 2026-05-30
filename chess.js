@@ -11,7 +11,8 @@ let futureRoutes = [];
 let blocked = null;
 let lastMove = null;
 let gameOver = false;
-
+let undoCountB = 0;
+let undoCountW = 0;
 let BKRhasMoved = 0;
 let BQRhasMoved = 0;
 let BKhasMoved = 0;
@@ -174,7 +175,17 @@ function resetGame() {
 }
 
 function undoMove() {
-  // debugger;
+  if (whiteToMove) {
+    undoCountW = undoCountW + 1;
+  } else {
+    undoCountB = undoCountB + 1;
+  }
+
+  if (undoCountB > 1 || undoCountW > 1) {
+    alert("Can only undo once");
+    return;
+  }
+
   board = structuredClone(boardPrev);
   renderBoard();
   adjustRoutes();
